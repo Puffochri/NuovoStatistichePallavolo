@@ -410,3 +410,158 @@ body.light tfoot td {
         font-size: 0.75rem;
     }
 }
+/* ... tieni tutto quello che avevamo prima ... */
+
+/* SEZIONE CAMPO */
+
+.court-section {
+    margin-bottom: 16px;
+}
+
+.court-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.court-controls {
+    display: flex;
+    gap: 6px;
+}
+
+.court-wrapper {
+    margin-top: 8px;
+    display: flex;
+    justify-content: center;
+}
+
+.court {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    aspect-ratio: 2 / 1;
+    background: linear-gradient(135deg, #0f766e, #0d9488);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 14px 40px rgba(15,23,42,0.7);
+    border: 3px solid rgba(248,250,252,0.4);
+}
+
+.court-net {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(248,250,252,0.9),
+        rgba(248,250,252,0.9) 6px,
+        rgba(15,23,42,0.3) 6px,
+        rgba(15,23,42,0.3) 10px
+    );
+    transform: translateX(-50%);
+}
+
+.court-side {
+    position: absolute;
+    top: 6%;
+    bottom: 6%;
+    width: 50%;
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
+    padding: 6px;
+    gap: 4px;
+}
+
+/* lato A di default a sinistra */
+.court-side-a {
+    left: 0;
+}
+
+/* lato B a destra (solo grafico) */
+.court-side-b {
+    right: 0;
+    border-left: 2px solid rgba(15,23,42,0.35);
+}
+
+/* linee campo */
+.court-side::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 2px solid rgba(248,250,252,0.7);
+    border-radius: 10px;
+    pointer-events: none;
+}
+
+/* posizioni numerate */
+.pos {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* giocatrice */
+.player-dot {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background: radial-gradient(circle at 30% 30%, #fef9c3, #f97316);
+    box-shadow: 0 6px 14px rgba(15,23,42,0.7);
+    color: #111827;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4px;
+    transform: translateY(0);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.player-dot:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(15,23,42,0.8);
+}
+
+/* animazione rotazione/cambio campo */
+.court-animate .player-dot {
+    animation: playerMove 0.35s ease-out;
+}
+
+@keyframes playerMove {
+    from {
+        transform: translateY(8px);
+        opacity: 0.2;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* quando cambio campo, invertiamo i lati con una classe */
+.court.switched .court-side-a {
+    left: 50%;
+    transform: translateX(0);
+}
+
+.court.switched .court-side-b {
+    right: 50%;
+    transform: translateX(0);
+}
+
+/* adattamento mobile */
+@media (max-width: 640px) {
+    .player-dot {
+        width: 32px;
+        height: 32px;
+        font-size: 0.6rem;
+    }
+}

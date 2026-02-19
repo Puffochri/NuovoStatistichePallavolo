@@ -5,18 +5,10 @@
     <title>Volley Stats Pro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Manifest PWA -->
     <link rel="manifest" href="manifest.webmanifest">
-
-    <!-- Colore barra indirizzi mobile -->
     <meta name="theme-color" content="#0b5ed7">
-
     <link rel="stylesheet" href="style.css">
-
-    <!-- Libreria per PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
-
-    <!-- Icona base (puoi sostituirla) -->
     <link rel="icon" type="image/png" href="icon-192.png">
 </head>
 <body>
@@ -26,7 +18,7 @@
     <header class="app-header">
         <div class="title-block">
             <h1>🏐 Volley Stats Pro</h1>
-            <p class="subtitle">Statistiche avanzate per la tua squadra</p>
+            <p class="subtitle">Statistiche avanzate e campo interattivo</p>
         </div>
         <div class="header-actions">
             <button id="themeToggle" title="Tema chiaro/scuro">🌓</button>
@@ -103,6 +95,40 @@
         </div>
     </section>
 
+    <!-- NUOVA SEZIONE: CAMPO DI GIOCO -->
+    <section class="court-section card">
+        <div class="court-header">
+            <h2>Campo e rotazioni</h2>
+            <div class="court-controls">
+                <button id="rotateClockwise">↻ Rotazione</button>
+                <button id="switchSide">⇄ Cambio campo</button>
+            </div>
+        </div>
+        <p class="small-note">
+            Le prime 6 giocatrici della lista vengono posizionate in campo (posizioni 1–6).
+        </p>
+
+        <div class="court-wrapper">
+            <div id="court" class="court">
+                <div class="court-net"></div>
+
+                <!-- lato sinistra/destra gestito via CSS + JS -->
+                <div class="court-side court-side-a">
+                    <div class="pos pos-4" data-pos="4"></div>
+                    <div class="pos pos-3" data-pos="3"></div>
+                    <div class="pos pos-2" data-pos="2"></div>
+                    <div class="pos pos-5" data-pos="5"></div>
+                    <div class="pos pos-6" data-pos="6"></div>
+                    <div class="pos pos-1" data-pos="1"></div>
+                </div>
+
+                <div class="court-side court-side-b">
+                    <!-- solo grafico, nessun giocatore per ora -->
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section class="players-section card">
         <div class="players-header">
             <h2>Giocatori</h2>
@@ -112,7 +138,6 @@
             </div>
         </div>
 
-        <!-- Contenuto da esportare in PDF -->
         <div id="report">
             <div class="report-header">
                 <div><strong>Team A:</strong> <span id="labelTeamA"></span></div>
@@ -160,8 +185,6 @@
 </div>
 
 <script src="script.js"></script>
-
-<!-- Registrazione service worker PWA -->
 <script>
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {

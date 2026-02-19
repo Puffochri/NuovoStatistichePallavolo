@@ -1,4 +1,4 @@
-const STORAGE_KEY = "volley_stats_pwa_v1";
+const STORAGE_KEY = "volley_stats_pwa_v2";
 
 let state = {
     teamA: "",
@@ -12,7 +12,9 @@ let state = {
         3: [],
         4: [],
         5: []
-    }
+    },
+    rotation: [1, 2, 3, 4, 5, 6], // posizioni base
+    sideSwitched: false
 };
 
 const fieldsOrder = [
@@ -59,6 +61,7 @@ function bindUI() {
             document.getElementById("labelSet").textContent = state.currentSet;
             document.getElementById("labelSetReport").textContent = state.currentSet;
             renderPlayers();
+            renderCourt(true);
             saveToStorage();
         });
     });
@@ -72,6 +75,21 @@ function bindUI() {
     document.getElementById("playersBody").addEventListener("click", handleTableClick);
 
     document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+
+    // NUOVI BOTTONI CAMPO
+    document.getElementById("rotateClockwise").addEventListener("click", () => {
+        rotateClockwise();
+        renderCourt(true);
+        saveToStorage();
+    });
+
+    document.getElementById("switchSide").addEventListener("click", () => {
+        state.sideSwitched = !state.sideSwitched;
+        const court = document.getElementById("court");
+        court.classList.toggle("switched", state.sideSwitched);
+        renderCourt(true);
+        saveToStorage();
+    });
 }
 
 function addPlayer() {
@@ -92,6 +110,7 @@ function addPlayer() {
     state.sets[state.currentSet].push(player);
     nameInput.value = "";
     renderPlayers(true);
+    renderCourt(true);
     saveToStorage();
 }
 
@@ -118,6 +137,7 @@ function handleTableClick(e) {
     if (target.classList.contains("delete")) {
         players.splice(index, 1);
         renderPlayers();
+        renderCourt(true);
         saveToStorage();
     }
 }
@@ -134,7 +154,12 @@ function renderAll() {
     document.querySelectorAll(".set-btn").forEach(btn => {
         btn.classList.toggle("active", parseInt(btn.dataset.set, 10) === state.currentSet);
     });
+
+    const court = document.getElementById("court");
+    court.classList.toggle("switched", state.sideSwitched);
+
     renderPlayers();
+    renderCourt(false);
 }
 
 function renderPlayers(scrollToBottom = false) {
@@ -175,13 +200,12 @@ function renderPlayers(scrollToBottom = false) {
 
     renderTotals();
     renderSummary();
+    highlightBestPlayers();
 
     if (scrollToBottom) {
         const wrapper = document.querySelector(".table-wrapper");
         wrapper.scrollTop = wrapper.scrollHeight;
     }
-
-    highlightBestPlayers();
 }
 
 function renderTotals() {
@@ -284,6 +308,45 @@ function calcPercentages(obj) {
     };
 }
 
+/* CAMPO: ROTAZIONI E POSIZIONI */
+
+function renderCourt(withAnimation) {
+    const court = document.getElementById("court");
+    const sideA = court.querySelector(".court-side-a");
+    const posDivs = sideA.querySelectorAll(".pos");
+
+    posDivs.forEach(div => div.innerHTML = "");
+
+    const players = state.sets[state.currentSet];
+    const firstSix = players.slice(0, 6);
+
+    if (withAnimation) {
+        court.classList.add("court-animate");
+        setTimeout(() => court.classList.remove("court-animate"), 350);
+    }
+
+    firstSix.forEach((player, index) => {
+        const rotationPos = state.rotation[index]; // 1..6
+        const targetDiv = sideA.querySelector(`.pos-${rotationPos}`);
+        if (!targetDiv) return;
+
+        const dot = document.createElement("div");
+        dot.className = "player-dot";
+        dot.textContent = player.name.length > 6 ? player.name.slice(0, 6) : player.name;
+        targetDiv.appendChild(dot);
+    });
+}
+
+function rotateClockwise() {
+    // rotazione classica: 1→6, 6→5, 5→4, 4→3, 3→2, 2→1
+    // ma noi ruotiamo l'array: [1,2,3,4,5,6] -> [6,1,2,3,4,5]
+    const arr = state.rotation;
+    const last = arr.pop();
+    arr.unshift(last);
+}
+
+/* STORAGE, TEMA, PDF, BACKUP */
+
 function saveToStorage() {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -301,6 +364,7 @@ function loadFromStorage() {
         for (let i = 1; i <= 5; i++) {
             if (!state.sets[i]) state.sets[i] = [];
         }
+        if (!state.rotation) state.rotation = [1,2,3,4,5,6];
     } catch (e) {
         console.warn("Impossibile leggere da localStorage", e);
     }
@@ -314,7 +378,9 @@ function resetAll() {
         matchDate: "",
         matchPlace: "",
         currentSet: 1,
-        sets: {1: [], 2: [], 3: [], 4: [], 5: []}
+        sets: {1: [], 2: [], 3: [], 4: [], 5: []},
+        rotation: [1,2,3,4,5,6],
+        sideSwitched: false
     };
     saveToStorage();
     renderAll();
