@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Statistiche Volley</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+    <!-- Libreria per PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+<div id="app">
+
+    <h1>🏐 Statistiche Volley</h1>
+
+    <div class="top-bar">
+        <button id="reset">🔄 Reset Dati</button>
+        <span class="small-note">Dati salvati in locale su questo dispositivo</span>
+    </div>
+
+    <div class="teams">
+        <input id="teamA" placeholder="Team A">
+        <input id="teamB" placeholder="Team B">
+    </div>
+
+    <h2>Set</h2>
+    <div class="set-container">
+        <button class="set-btn active" data-set="1">Set 1</button>
+        <button class="set-btn" data-set="2">Set 2</button>
+        <button class="set-btn" data-set="3">Set 3</button>
+        <button class="set-btn" data-set="4">Set 4</button>
+        <button class="set-btn" data-set="5">Set 5</button>
+    </div>
+
+    <div class="pdf-buttons">
+        <button id="pdfSet">📄 PDF Set</button>
+        <button id="pdfFinale">📘 PDF Finale</button>
+    </div>
+
+    <h2>Giocatori</h2>
+
+    <div class="add-player">
+        <input id="playerName" placeholder="Nome giocatore">
+        <button id="addPlayer">➕ Aggiungi</button>
+    </div>
+
+    <!-- Contenuto da esportare in PDF -->
+    <div id="report">
+
+        <div class="report-header">
+            <div><strong>Team A:</strong> <span id="labelTeamA"></span></div>
+            <div><strong>Team B:</strong> <span id="labelTeamB"></span></div>
+            <div><strong>Set attivo:</strong> <span id="labelSet">1</span></div>
+        </div>
+
+        <table id="playersTable">
+            <thead>
+                <tr>
+                    <th>Giocatore</th>
+                    <th>attPos</th><th>attNeg</th>
+                    <th>difPos</th><th>difNeg</th>
+                    <th>battPos</th><th>battNeg</th>
+                    <th>ricezPos</th><th>ricezNeg</th>
+                    <th>muro</th><th>muroPunto</th><th>muroFuori</th>
+                    <th>Papere</th>
+                    <th>% Att</th><th>% Dif</th><th>% Bat</th><th>% Rcz</th><th>% Muro+</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody id="playersBody"></tbody>
+
+            <tfoot>
+                <tr id="totalsRow">
+                    <td><b>Totali</b></td>
+                    <td>0</td><td>0</td>
+                    <td>0</td><td>0</td>
+                    <td>0</td><td>0</td>
+                    <td>0</td><td>0</td>
+                    <td>0</td><td>0</td><td>0</td>
+                    <td>0</td>
+                    <td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
