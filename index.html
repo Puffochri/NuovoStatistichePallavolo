@@ -2,92 +2,174 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Statistiche Volley</title>
+    <title>Volley Stats Pro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Manifest PWA -->
+    <link rel="manifest" href="manifest.webmanifest">
+
+    <!-- Colore barra indirizzi mobile -->
+    <meta name="theme-color" content="#0b5ed7">
+
     <link rel="stylesheet" href="style.css">
+
     <!-- Libreria per PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+
+    <!-- Icona base (puoi sostituirla) -->
+    <link rel="icon" type="image/png" href="icon-192.png">
 </head>
 <body>
 
-<div id="app">
+<div id="app" class="fade-in">
 
-    <h1>🏐 Statistiche Volley</h1>
+    <header class="app-header">
+        <div class="title-block">
+            <h1>🏐 Volley Stats Pro</h1>
+            <p class="subtitle">Statistiche avanzate per la tua squadra</p>
+        </div>
+        <div class="header-actions">
+            <button id="themeToggle" title="Tema chiaro/scuro">🌓</button>
+            <button id="reset" class="danger">🔄 Reset Dati</button>
+        </div>
+    </header>
 
-    <div class="top-bar">
-        <button id="reset">🔄 Reset Dati</button>
-        <span class="small-note">Dati salvati in locale su questo dispositivo</span>
-    </div>
+    <section class="info-bar">
+        <div class="teams">
+            <input id="teamA" placeholder="Team A">
+            <input id="teamB" placeholder="Team B">
+        </div>
+        <div class="meta">
+            <label>
+                Data:
+                <input type="date" id="matchDate">
+            </label>
+            <label>
+                Luogo:
+                <input type="text" id="matchPlace" placeholder="Palestra, città...">
+            </label>
+        </div>
+    </section>
 
-    <div class="teams">
-        <input id="teamA" placeholder="Team A">
-        <input id="teamB" placeholder="Team B">
-    </div>
-
-    <h2>Set</h2>
-    <div class="set-container">
-        <button class="set-btn active" data-set="1">Set 1</button>
-        <button class="set-btn" data-set="2">Set 2</button>
-        <button class="set-btn" data-set="3">Set 3</button>
-        <button class="set-btn" data-set="4">Set 4</button>
-        <button class="set-btn" data-set="5">Set 5</button>
-    </div>
-
-    <div class="pdf-buttons">
-        <button id="pdfSet">📄 PDF Set</button>
-        <button id="pdfFinale">📘 PDF Finale</button>
-    </div>
-
-    <h2>Giocatori</h2>
-
-    <div class="add-player">
-        <input id="playerName" placeholder="Nome giocatore">
-        <button id="addPlayer">➕ Aggiungi</button>
-    </div>
-
-    <!-- Contenuto da esportare in PDF -->
-    <div id="report">
-
-        <div class="report-header">
-            <div><strong>Team A:</strong> <span id="labelTeamA"></span></div>
-            <div><strong>Team B:</strong> <span id="labelTeamB"></span></div>
-            <div><strong>Set attivo:</strong> <span id="labelSet">1</span></div>
+    <section class="top-widgets">
+        <div class="sets-card card">
+            <h2>Set</h2>
+            <div class="set-container">
+                <button class="set-btn active" data-set="1">Set 1</button>
+                <button class="set-btn" data-set="2">Set 2</button>
+                <button class="set-btn" data-set="3">Set 3</button>
+                <button class="set-btn" data-set="4">Set 4</button>
+                <button class="set-btn" data-set="5">Set 5</button>
+            </div>
+            <p class="small-note">Set attivo: <span id="labelSet">1</span></p>
         </div>
 
-        <table id="playersTable">
-            <thead>
-                <tr>
-                    <th>Giocatore</th>
-                    <th>attPos</th><th>attNeg</th>
-                    <th>difPos</th><th>difNeg</th>
-                    <th>battPos</th><th>battNeg</th>
-                    <th>ricezPos</th><th>ricezNeg</th>
-                    <th>muro</th><th>muroPunto</th><th>muroFuori</th>
-                    <th>Papere</th>
-                    <th>% Att</th><th>% Dif</th><th>% Bat</th><th>% Rcz</th><th>% Muro+</th>
-                    <th>Azioni</th>
-                </tr>
-            </thead>
-            <tbody id="playersBody"></tbody>
+        <div class="summary-card card">
+            <h2>Riepilogo rapido</h2>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="label">Giocatori</span>
+                    <span class="value" id="summaryPlayers">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Azioni totali</span>
+                    <span class="value" id="summaryActions">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Miglior attacco</span>
+                    <span class="value" id="summaryBestAtt">-</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Miglior ricezione</span>
+                    <span class="value" id="summaryBestRcz">-</span>
+                </div>
+            </div>
+        </div>
 
-            <tfoot>
-                <tr id="totalsRow">
-                    <td><b>Totali</b></td>
-                    <td>0</td><td>0</td>
-                    <td>0</td><td>0</td>
-                    <td>0</td><td>0</td>
-                    <td>0</td><td>0</td>
-                    <td>0</td><td>0</td><td>0</td>
-                    <td>0</td>
-                    <td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td>
-                    <td></td>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
+        <div class="export-card card">
+            <h2>Esportazione</h2>
+            <div class="pdf-buttons">
+                <button id="pdfSet">📄 PDF Set</button>
+                <button id="pdfFinale">📘 PDF Finale</button>
+            </div>
+            <div class="backup-buttons">
+                <button id="exportJson">💾 Esporta backup</button>
+                <label class="import-label">
+                    📂 Importa backup
+                    <input type="file" id="importJson" accept="application/json">
+                </label>
+            </div>
+            <p class="small-note">Dati salvati in locale su questo dispositivo.</p>
+        </div>
+    </section>
+
+    <section class="players-section card">
+        <div class="players-header">
+            <h2>Giocatori</h2>
+            <div class="add-player">
+                <input id="playerName" placeholder="Nome giocatore">
+                <button id="addPlayer">➕ Aggiungi</button>
+            </div>
+        </div>
+
+        <!-- Contenuto da esportare in PDF -->
+        <div id="report">
+            <div class="report-header">
+                <div><strong>Team A:</strong> <span id="labelTeamA"></span></div>
+                <div><strong>Team B:</strong> <span id="labelTeamB"></span></div>
+                <div><strong>Set:</strong> <span id="labelSetReport">1</span></div>
+                <div><strong>Data:</strong> <span id="labelDate"></span></div>
+                <div><strong>Luogo:</strong> <span id="labelPlace"></span></div>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="playersTable">
+                    <thead>
+                        <tr>
+                            <th>Giocatore</th>
+                            <th>attPos</th><th>attNeg</th>
+                            <th>difPos</th><th>difNeg</th>
+                            <th>battPos</th><th>battNeg</th>
+                            <th>ricezPos</th><th>ricezNeg</th>
+                            <th>muro</th><th>muroPunto</th><th>muroFuori</th>
+                            <th>Papere</th>
+                            <th>% Att</th><th>% Dif</th><th>% Bat</th><th>% Rcz</th><th>% Muro+</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="playersBody"></tbody>
+
+                    <tfoot>
+                        <tr id="totalsRow">
+                            <td><b>Totali</b></td>
+                            <td>0</td><td>0</td>
+                            <td>0</td><td>0</td>
+                            <td>0</td><td>0</td>
+                            <td>0</td><td>0</td>
+                            <td>0</td><td>0</td><td>0</td>
+                            <td>0</td>
+                            <td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </section>
 
 </div>
 
 <script src="script.js"></script>
+
+<!-- Registrazione service worker PWA -->
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+            .catch(err => console.log('SW error', err));
+    });
+}
+</script>
+
 </body>
 </html>

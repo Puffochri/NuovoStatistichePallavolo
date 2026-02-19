@@ -1,10 +1,11 @@
-const STORAGE_KEY = "volley_stats_v1";
+const STORAGE_KEY = "volley_stats_pwa_v1";
 
 let state = {
     teamA: "",
     teamB: "",
+    matchDate: "",
+    matchPlace: "",
     currentSet: 1,
-    // dati per set: {1: [players], 2: [...], ...}
     sets: {
         1: [],
         2: [],
@@ -27,6 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadFromStorage();
     bindUI();
     renderAll();
+    applySavedTheme();
 });
 
 function bindUI() {
@@ -34,13 +36,19 @@ function bindUI() {
     document.getElementById("reset").addEventListener("click", resetAll);
     document.getElementById("teamA").addEventListener("input", e => {
         state.teamA = e.target.value;
-        saveToStorage();
-        syncHeaderTeams();
+        saveAndRenderHeader();
     });
     document.getElementById("teamB").addEventListener("input", e => {
         state.teamB = e.target.value;
-        saveToStorage();
-        syncHeaderTeams();
+        saveAndRenderHeader();
+    });
+    document.getElementById("matchDate").addEventListener("input", e => {
+        state.matchDate = e.target.value;
+        saveAndRenderHeader();
+    });
+    document.getElementById("matchPlace").addEventListener("input", e => {
+        state.matchPlace = e.target.value;
+        saveAndRenderHeader();
     });
 
     document.querySelectorAll(".set-btn").forEach(btn => {
@@ -49,6 +57,7 @@ function bindUI() {
             btn.classList.add("active");
             state.currentSet = parseInt(btn.dataset.set, 10);
             document.getElementById("labelSet").textContent = state.currentSet;
+            document.getElementById("labelSetReport").textContent = state.currentSet;
             renderPlayers();
             saveToStorage();
         });
@@ -57,8 +66,12 @@ function bindUI() {
     document.getElementById("pdfSet").addEventListener("click", () => exportPDF(false));
     document.getElementById("pdfFinale").addEventListener("click", () => exportPDF(true));
 
-    // delega eventi +/-, delete
+    document.getElementById("exportJson").addEventListener("click", exportJson);
+    document.getElementById("importJson").addEventListener("change", importJson);
+
     document.getElementById("playersBody").addEventListener("click", handleTableClick);
+
+    document.getElementById("themeToggle").addEventListener("click", toggleTheme);
 }
 
 function addPlayer() {
@@ -78,7 +91,7 @@ function addPlayer() {
 
     state.sets[state.currentSet].push(player);
     nameInput.value = "";
-    renderPlayers();
+    renderPlayers(true);
     saveToStorage();
 }
 
@@ -98,6 +111,8 @@ function handleTableClick(e) {
         player[field] = Math.max(0, (player[field] || 0) + delta);
         renderPlayers();
         saveToStorage();
+        row.classList.add("updated");
+        setTimeout(() => row.classList.remove("updated"), 200);
     }
 
     if (target.classList.contains("delete")) {
@@ -110,15 +125,19 @@ function handleTableClick(e) {
 function renderAll() {
     document.getElementById("teamA").value = state.teamA;
     document.getElementById("teamB").value = state.teamB;
-    syncHeaderTeams();
+    document.getElementById("matchDate").value = state.matchDate || "";
+    document.getElementById("matchPlace").value = state.matchPlace || "";
+    saveAndRenderHeader(false);
+
     document.getElementById("labelSet").textContent = state.currentSet;
+    document.getElementById("labelSetReport").textContent = state.currentSet;
     document.querySelectorAll(".set-btn").forEach(btn => {
         btn.classList.toggle("active", parseInt(btn.dataset.set, 10) === state.currentSet);
     });
     renderPlayers();
 }
 
-function renderPlayers() {
+function renderPlayers(scrollToBottom = false) {
     const tbody = document.getElementById("playersBody");
     tbody.innerHTML = "";
 
@@ -155,6 +174,14 @@ function renderPlayers() {
     });
 
     renderTotals();
+    renderSummary();
+
+    if (scrollToBottom) {
+        const wrapper = document.querySelector(".table-wrapper");
+        wrapper.scrollTop = wrapper.scrollHeight;
+    }
+
+    highlightBestPlayers();
 }
 
 function renderTotals() {
@@ -175,7 +202,6 @@ function renderTotals() {
     const row = document.getElementById("totalsRow");
     const cells = row.querySelectorAll("td");
 
-    // ordine: label, 12 valori, papere, 5 %, azioni
     let i = 1;
     fieldsOrder.forEach(f => {
         cells[i].textContent = totals[f];
@@ -188,6 +214,58 @@ function renderTotals() {
     cells[i++].textContent = perc.bat.toFixed(0) + "%";
     cells[i++].textContent = perc.rcz.toFixed(0) + "%";
     cells[i++].textContent = perc.muro.toFixed(0) + "%";
+}
+
+function renderSummary() {
+    const players = state.sets[state.currentSet];
+    document.getElementById("summaryPlayers").textContent = players.length;
+
+    let totalActions = 0;
+    players.forEach(p => {
+        fieldsOrder.forEach(f => totalActions += p[f]);
+    });
+    document.getElementById("summaryActions").textContent = totalActions;
+
+    const bestAtt = getBestPlayerBy("att");
+    const bestRcz = getBestPlayerBy("rcz");
+
+    document.getElementById("summaryBestAtt").textContent = bestAtt || "-";
+    document.getElementById("summaryBestRcz").textContent = bestRcz || "-";
+}
+
+function getBestPlayerBy(type) {
+    const players = state.sets[state.currentSet];
+    let bestName = null;
+    let bestVal = 0;
+
+    players.forEach(p => {
+        const perc = calcPercentages(p);
+        const val = perc[type];
+        if (val > bestVal && (p.attPos + p.attNeg + p.ricezPos + p.ricezNeg) > 0) {
+            bestVal = val;
+            bestName = `${p.name} (${val.toFixed(0)}%)`;
+        }
+    });
+
+    return bestName;
+}
+
+function highlightBestPlayers() {
+    const players = state.sets[state.currentSet];
+    let bestIndex = -1;
+    let bestVal = 0;
+
+    players.forEach((p, idx) => {
+        const perc = calcPercentages(p);
+        if (perc.att > bestVal && (p.attPos + p.attNeg) > 0) {
+            bestVal = perc.att;
+            bestIndex = idx;
+        }
+    });
+
+    document.querySelectorAll("#playersBody tr").forEach((tr, idx) => {
+        tr.classList.toggle("best-player", idx === bestIndex);
+    });
 }
 
 function calcPercentages(obj) {
@@ -219,9 +297,7 @@ function loadFromStorage() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return;
         const parsed = JSON.parse(raw);
-        // merge semplice
         state = Object.assign(state, parsed);
-        // assicuro che ci siano tutti i set
         for (let i = 1; i <= 5; i++) {
             if (!state.sets[i]) state.sets[i] = [];
         }
@@ -235,6 +311,8 @@ function resetAll() {
     state = {
         teamA: "",
         teamB: "",
+        matchDate: "",
+        matchPlace: "",
         currentSet: 1,
         sets: {1: [], 2: [], 3: [], 4: [], 5: []}
     };
@@ -242,9 +320,12 @@ function resetAll() {
     renderAll();
 }
 
-function syncHeaderTeams() {
+function saveAndRenderHeader(save = true) {
     document.getElementById("labelTeamA").textContent = state.teamA || "Team A";
     document.getElementById("labelTeamB").textContent = state.teamB || "Team B";
+    document.getElementById("labelDate").textContent = state.matchDate || "-";
+    document.getElementById("labelPlace").textContent = state.matchPlace || "-";
+    if (save) saveToStorage();
 }
 
 function exportPDF(isFinale) {
@@ -259,4 +340,51 @@ function exportPDF(isFinale) {
     };
 
     html2pdf().from(element).set(opt).save();
+}
+
+function exportJson() {
+    const dataStr = JSON.stringify(state, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "volley_stats_backup.json";
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
+
+function importJson(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            const imported = JSON.parse(reader.result);
+            if (!imported.sets) throw new Error("Formato non valido");
+            state = imported;
+            saveToStorage();
+            renderAll();
+            alert("Backup importato correttamente.");
+        } catch (err) {
+            alert("Errore nel file di backup.");
+        }
+    };
+    reader.readAsText(file);
+}
+
+/* Tema chiaro/scuro */
+
+function toggleTheme() {
+    const isLight = document.body.classList.toggle("light");
+    localStorage.setItem("volley_theme", isLight ? "light" : "dark");
+}
+
+function applySavedTheme() {
+    const theme = localStorage.getItem("volley_theme");
+    if (theme === "light") {
+        document.body.classList.add("light");
+    }
 }
