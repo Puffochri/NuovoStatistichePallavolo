@@ -733,11 +733,49 @@ function applySavedTheme() {
 }
 
 function exportPagellePDF() {
-    const players = state.sets[state.currentSet];
+    // 1) SOMMO LE STATISTICHE DI TUTTI I SET
+    const allPlayersMap = {};
 
+    for (let s = 1; s <= 5; s++) {
+        const setPlayers = state.sets[s];
+
+        setPlayers.forEach(p => {
+            if (!allPlayersMap[p.name]) {
+                allPlayersMap[p.name] = {
+                    name: p.name,
+                    role: p.role,
+                    attPos: 0, attNeg: 0,
+                    difPos: 0, difNeg: 0,
+                    battPos: 0, battNeg: 0,
+                    ricezPos: 0, ricezNeg: 0,
+                    muro: 0, muroPunto: 0, muroFuori: 0,
+                    papere: 0
+                };
+            }
+
+            const agg = allPlayersMap[p.name];
+            agg.attPos += p.attPos;
+            agg.attNeg += p.attNeg;
+            agg.difPos += p.difPos;
+            agg.difNeg += p.difNeg;
+            agg.battPos += p.battPos;
+            agg.battNeg += p.battNeg;
+            agg.ricezPos += p.ricezPos;
+            agg.ricezNeg += p.ricezNeg;
+            agg.muro += p.muro;
+            agg.muroPunto += p.muroPunto;
+            agg.muroFuori += p.muroFuori;
+            agg.papere += p.papere;
+        });
+    }
+
+    const players = Object.values(allPlayersMap);
+
+    // 2) COSTRUISCO IL PDF
     let html = `
-        <h2>Pagelle della Partita - Set ${state.currentSet}</h2>
+        <h2>Pagelle Finali della Partita</h2>
         <p>${state.teamA || "Team A"} - vs - ${state.teamB || "Team B"}</p>
+        <p><b>Resoconto di tutti i set</b></p>
         <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; font-size:11px;">
             <thead>
                 <tr>
@@ -764,23 +802,23 @@ function exportPagellePDF() {
             (p.ricezNeg * 0.8) -
             (p.papere * 2);
 
-        const voto = Math.max(1, Math.min(10, (score / 5) + 6)).toFixed(1);
+        const voto = Math.max(1, Math.min(10, (score / 8) + 6)).toFixed(1);
 
         let consiglio = "";
         let motivazione = "";
 
         if (voto >= 8) {
             consiglio = "Continua così";
-            motivazione = "Prestazione molto solida, pochi errori e grande contributo.";
+            motivazione = "Prestazione molto solida e costante.";
         } else if (voto >= 6.5) {
             consiglio = "Buon lavoro";
-            motivazione = "Prestazione positiva con margini di miglioramento.";
+            motivazione = "Prestazione positiva con margini di crescita.";
         } else if (voto >= 5) {
-            consiglio = "Lavora su tecnica e costanza";
-            motivazione = "Alti e bassi, serve più continuità.";
+            consiglio = "Lavora sulla continuità";
+            motivazione = "Serve più precisione e meno errori.";
         } else {
             consiglio = "Serve più concentrazione";
-            motivazione = "Troppi errori, migliorare gestione e precisione.";
+            motivazione = "Troppi errori, migliorare gestione e tecnica.";
         }
 
         html += `
@@ -804,10 +842,11 @@ function exportPagellePDF() {
 
     const opt = {
         margin: 5,
-        filename: `pagelle_volley_set${state.currentSet}.pdf`,
+        filename: `pagelle_finali_partita.pdf`,
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
     };
 
     html2pdf().from(container).set(opt).save();
 }
+
