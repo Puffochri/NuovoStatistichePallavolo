@@ -18,7 +18,7 @@
     <header class="app-header">
         <div class="title-block">
             <h1>🏐 Volley Stats Pro</h1>
-            <p class="subtitle">Statistiche avanzate e campo interattivo</p>
+            <p class="subtitle">Statistiche, campo, punteggi live</p>
         </div>
         <div class="header-actions">
             <button id="themeToggle" title="Tema chiaro/scuro">🌓</button>
@@ -45,7 +45,7 @@
 
     <section class="top-widgets">
         <div class="sets-card card">
-            <h2>Set</h2>
+            <h2>Set & punteggio live</h2>
             <div class="set-container">
                 <button class="set-btn active" data-set="1">Set 1</button>
                 <button class="set-btn" data-set="2">Set 2</button>
@@ -54,6 +54,30 @@
                 <button class="set-btn" data-set="5">Set 5</button>
             </div>
             <p class="small-note">Set attivo: <span id="labelSet">1</span></p>
+
+            <div class="live-score">
+                <div class="live-score-row">
+                    <span id="labelTeamA_live">Team A</span>
+                    <div class="score-controls">
+                        <button class="score-btn" data-team="A" data-delta="-1">-</button>
+                        <span class="score-value" id="scoreA">0</span>
+                        <button class="score-btn" data-team="A" data-delta="1">+</button>
+                    </div>
+                </div>
+                <div class="live-score-row">
+                    <span id="labelTeamB_live">Team B</span>
+                    <div class="score-controls">
+                        <button class="score-btn" data-team="B" data-delta="-1">-</button>
+                        <span class="score-value" id="scoreB">0</span>
+                        <button class="score-btn" data-team="B" data-delta="1">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sets-summary">
+                <h3>Risultato set</h3>
+                <ul id="setsResultList"></ul>
+            </div>
         </div>
 
         <div class="summary-card card">
@@ -84,35 +108,28 @@
                 <button id="pdfSet">📄 PDF Set</button>
                 <button id="pdfFinale">📘 PDF Finale</button>
             </div>
-            <div class="backup-buttons">
-                <button id="exportJson">💾 Esporta backup</button>
-                <label class="import-label">
-                    📂 Importa backup
-                    <input type="file" id="importJson" accept="application/json">
-                </label>
-            </div>
             <p class="small-note">Dati salvati in locale su questo dispositivo.</p>
         </div>
     </section>
 
-    <!-- NUOVA SEZIONE: CAMPO DI GIOCO -->
+    <!-- CAMPO DI GIOCO -->
     <section class="court-section card">
         <div class="court-header">
-            <h2>Campo e rotazioni</h2>
+            <h2>Campo, rotazioni e sostituzioni</h2>
             <div class="court-controls">
                 <button id="rotateClockwise">↻ Rotazione</button>
                 <button id="switchSide">⇄ Cambio campo</button>
             </div>
         </div>
         <p class="small-note">
-            Le prime 6 giocatrici della lista vengono posizionate in campo (posizioni 1–6).
+            Le prime 6 giocatrici della lista sono in campo (posizioni 1–6).  
+            Tocca una giocatrice in campo per sostituirla con un’altra dalla lista.
         </p>
 
         <div class="court-wrapper">
             <div id="court" class="court">
                 <div class="court-net"></div>
 
-                <!-- lato sinistra/destra gestito via CSS + JS -->
                 <div class="court-side court-side-a">
                     <div class="pos pos-4" data-pos="4"></div>
                     <div class="pos pos-3" data-pos="3"></div>
@@ -123,7 +140,7 @@
                 </div>
 
                 <div class="court-side court-side-b">
-                    <!-- solo grafico, nessun giocatore per ora -->
+                    <!-- lato avversario solo grafico -->
                 </div>
             </div>
         </div>

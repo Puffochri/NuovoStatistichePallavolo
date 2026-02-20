@@ -49,14 +49,8 @@ body {
 }
 
 @keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Header */
@@ -212,6 +206,81 @@ body.light .card {
     margin-top: 6px;
 }
 
+/* Punteggio live */
+
+.live-score {
+    margin-top: 10px;
+    border-radius: 12px;
+    padding: 8px 10px;
+    background: rgba(15,23,42,0.7);
+}
+
+body.light .live-score {
+    background: #f3f4f6;
+}
+
+.live-score-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.live-score-row:last-child {
+    margin-bottom: 0;
+}
+
+.score-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.score-btn {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(15,23,42,0.8);
+    box-shadow: none;
+    font-size: 0.9rem;
+}
+
+body.light .score-btn {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.score-value {
+    min-width: 24px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+/* Riepilogo set */
+
+.sets-summary {
+    margin-top: 10px;
+}
+
+.sets-summary h3 {
+    margin: 0 0 4px;
+    font-size: 0.9rem;
+}
+
+#setsResultList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+#setsResultList li span {
+    font-weight: 600;
+}
+
+/* Summary */
+
 .summary-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -239,23 +308,11 @@ body.light .summary-item {
     font-weight: 600;
 }
 
-.pdf-buttons, .backup-buttons {
+.pdf-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     margin-top: 6px;
-}
-
-.import-label {
-    position: relative;
-    overflow: hidden;
-}
-
-#importJson {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
 }
 
 /* Players section */
@@ -380,38 +437,6 @@ body.light tfoot td {
     background: #e5e7eb;
 }
 
-/* Mobile */
-
-@media (max-width: 900px) {
-    .top-widgets {
-        grid-template-columns: minmax(0, 1fr);
-    }
-}
-
-@media (max-width: 640px) {
-    #app {
-        padding: 10px;
-    }
-
-    .app-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .info-bar {
-        flex-direction: column;
-    }
-
-    .report-header {
-        flex-direction: column;
-    }
-
-    table {
-        font-size: 0.75rem;
-    }
-}
-/* ... tieni tutto quello che avevamo prima ... */
-
 /* SEZIONE CAMPO */
 
 .court-section {
@@ -432,15 +457,15 @@ body.light tfoot td {
 }
 
 .court-wrapper {
-    margin-top: 8px;
     display: flex;
     justify-content: center;
+    margin-top: 12px;
 }
 
 .court {
     position: relative;
     width: 100%;
-    max-width: 520px;
+    max-width: 900px;
     aspect-ratio: 2 / 1;
     background: linear-gradient(135deg, #0f766e, #0d9488);
     border-radius: 18px;
@@ -472,23 +497,14 @@ body.light tfoot td {
     width: 50%;
     display: grid;
     grid-template-rows: 1fr 1fr;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     padding: 6px;
     gap: 4px;
 }
 
-/* lato A di default a sinistra */
-.court-side-a {
-    left: 0;
-}
+.court-side-a { left: 0; }
+.court-side-b { right: 0; border-left: 2px solid rgba(15,23,42,0.35); }
 
-/* lato B a destra (solo grafico) */
-.court-side-b {
-    right: 0;
-    border-left: 2px solid rgba(15,23,42,0.35);
-}
-
-/* linee campo */
 .court-side::before {
     content: "";
     position: absolute;
@@ -498,7 +514,6 @@ body.light tfoot td {
     pointer-events: none;
 }
 
-/* posizioni numerate */
 .pos {
     position: relative;
     display: flex;
@@ -506,22 +521,20 @@ body.light tfoot td {
     justify-content: center;
 }
 
-/* giocatrice */
 .player-dot {
-    width: 40px;
-    height: 40px;
+    width: 55px;
+    height: 55px;
     border-radius: 999px;
     background: radial-gradient(circle at 30% 30%, #fef9c3, #f97316);
     box-shadow: 0 6px 14px rgba(15,23,42,0.7);
     color: #111827;
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     font-weight: 600;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
     padding: 4px;
-    transform: translateY(0);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -530,23 +543,15 @@ body.light tfoot td {
     box-shadow: 0 10px 20px rgba(15,23,42,0.8);
 }
 
-/* animazione rotazione/cambio campo */
 .court-animate .player-dot {
     animation: playerMove 0.35s ease-out;
 }
 
 @keyframes playerMove {
-    from {
-        transform: translateY(8px);
-        opacity: 0.2;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+    from { transform: translateY(8px); opacity: 0.2; }
+    to { transform: translateY(0); opacity: 1; }
 }
 
-/* quando cambio campo, invertiamo i lati con una classe */
 .court.switched .court-side-a {
     left: 50%;
     transform: translateX(0);
@@ -557,11 +562,39 @@ body.light tfoot td {
     transform: translateX(0);
 }
 
-/* adattamento mobile */
 @media (max-width: 640px) {
     .player-dot {
         width: 32px;
         height: 32px;
         font-size: 0.6rem;
+    }
+}
+
+/* Mobile */
+
+@media (max-width: 900px) {
+    .top-widgets {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    #app { padding: 10px; }
+
+    .app-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .info-bar {
+        flex-direction: column;
+    }
+
+    .report-header {
+        flex-direction: column;
+    }
+
+    table {
+        font-size: 0.75rem;
     }
 }

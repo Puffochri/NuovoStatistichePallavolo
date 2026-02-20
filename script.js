@@ -1,4 +1,4 @@
-const STORAGE_KEY = "volley_stats_pwa_v2";
+const STORAGE_KEY = "volley_stats_pwa_v4";
 
 let state = {
     teamA: "",
@@ -13,7 +13,14 @@ let state = {
         4: [],
         5: []
     },
-    rotation: [1, 2, 3, 4, 5, 6], // posizioni base
+    scores: {
+        1: { A: 0, B: 0 },
+        2: { A: 0, B: 0 },
+        3: { A: 0, B: 0 },
+        4: { A: 0, B: 0 },
+        5: { A: 0, B: 0 }
+    },
+    rotation: [1, 2, 3, 4, 5, 6],
     sideSwitched: false
 };
 
@@ -36,13 +43,16 @@ document.addEventListener("DOMContentLoaded", () => {
 function bindUI() {
     document.getElementById("addPlayer").addEventListener("click", addPlayer);
     document.getElementById("reset").addEventListener("click", resetAll);
+
     document.getElementById("teamA").addEventListener("input", e => {
         state.teamA = e.target.value;
         saveAndRenderHeader();
+        renderScoreHeaderLabels();
     });
     document.getElementById("teamB").addEventListener("input", e => {
         state.teamB = e.target.value;
         saveAndRenderHeader();
+        renderScoreHeaderLabels();
     });
     document.getElementById("matchDate").addEventListener("input", e => {
         state.matchDate = e.target.value;
@@ -62,6 +72,7 @@ function bindUI() {
             document.getElementById("labelSetReport").textContent = state.currentSet;
             renderPlayers();
             renderCourt(true);
+            renderScores();
             saveToStorage();
         });
     });
@@ -69,14 +80,10 @@ function bindUI() {
     document.getElementById("pdfSet").addEventListener("click", () => exportPDF(false));
     document.getElementById("pdfFinale").addEventListener("click", () => exportPDF(true));
 
-    document.getElementById("exportJson").addEventListener("click", exportJson);
-    document.getElementById("importJson").addEventListener("change", importJson);
-
     document.getElementById("playersBody").addEventListener("click", handleTableClick);
 
     document.getElementById("themeToggle").addEventListener("click", toggleTheme);
 
-    // NUOVI BOTTONI CAMPO
     document.getElementById("rotateClockwise").addEventListener("click", () => {
         rotateClockwise();
         renderCourt(true);
@@ -89,6 +96,14 @@ function bindUI() {
         court.classList.toggle("switched", state.sideSwitched);
         renderCourt(true);
         saveToStorage();
+    });
+
+    document.querySelectorAll(".score-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const team = btn.dataset.team;
+            const delta = parseInt(btn.dataset.delta, 10);
+            adjustScore(team, delta);
+        });
     });
 }
 
@@ -148,6 +163,7 @@ function renderAll() {
     document.getElementById("matchDate").value = state.matchDate || "";
     document.getElementById("matchPlace").value = state.matchPlace || "";
     saveAndRenderHeader(false);
+    renderScoreHeaderLabels();
 
     document.getElementById("labelSet").textContent = state.currentSet;
     document.getElementById("labelSetReport").textContent = state.currentSet;
@@ -160,6 +176,7 @@ function renderAll() {
 
     renderPlayers();
     renderCourt(false);
+    renderScores();
 }
 
 function renderPlayers(scrollToBottom = false) {
@@ -308,7 +325,7 @@ function calcPercentages(obj) {
     };
 }
 
-/* CAMPO: ROTAZIONI E POSIZIONI */
+/* CAMPO: ROTAZIONI, POSIZIONI, SOSTITUZIONI */
 
 function renderCourt(withAnimation) {
     const court = document.getElementById("court");
@@ -333,19 +350,104 @@ function renderCourt(withAnimation) {
         const dot = document.createElement("div");
         dot.className = "player-dot";
         dot.textContent = player.name.length > 6 ? player.name.slice(0, 6) : player.name;
+
+        dot.onclick = () => openSubstitutionMenu(index);
+
         targetDiv.appendChild(dot);
     });
 }
 
 function rotateClockwise() {
-    // rotazione classica: 1→6, 6→5, 5→4, 4→3, 3→2, 2→1
-    // ma noi ruotiamo l'array: [1,2,3,4,5,6] -> [6,1,2,3,4,5]
     const arr = state.rotation;
     const last = arr.pop();
     arr.unshift(last);
 }
 
-/* STORAGE, TEMA, PDF, BACKUP */
+function substitutePlayer(outIndex, inIndex) {
+    const players = state.sets[state.currentSet];
+    if (!players[outIndex] || !players[inIndex]) return;
+
+    const temp = players[outIndex];
+    players[outIndex] = players[inIndex];
+    players[inIndex] = temp;
+
+    renderPlayers();
+    renderCourt(true);
+    saveToStorage();
+}
+
+function openSubstitutionMenu(positionIndex) {
+    const players = state.sets[state.currentSet];
+    const outPlayer = players[positionIndex];
+    if (!outPlayer) return;
+
+    const nameOut = outPlayer.name;
+
+    const available = players
+        .map((p, i) => ({ name: p.name, index: i }))
+        .filter(p => p.index !== positionIndex);
+
+    if (available.length === 0) {
+        alert("Non ci sono altri giocatori per la sostituzione.");
+        return;
+    }
+
+    const names = available.map(p => p.name).join("\n");
+
+    const chosen = prompt(
+        `Sostituzione:\nEsce: ${nameOut}\n\nChi entra? Scrivi il nome esattamente come in lista:\n\n${names}`
+    );
+
+    if (!chosen) return;
+
+    const found = available.find(p => p.name === chosen);
+    if (!found) {
+        alert("Nome non valido.");
+        return;
+    }
+
+    substitutePlayer(positionIndex, found.index);
+}
+
+/* PUNTEGGI SET */
+
+function adjustScore(team, delta) {
+    const set = state.currentSet;
+    const score = state.scores[set][team];
+    const newScore = Math.max(0, score + delta);
+    state.scores[set][team] = newScore;
+    renderScores();
+    saveToStorage();
+}
+
+function renderScores() {
+    const set = state.currentSet;
+    const scoreA = state.scores[set].A;
+    const scoreB = state.scores[set].B;
+
+    document.getElementById("scoreA").textContent = scoreA;
+    document.getElementById("scoreB").textContent = scoreB;
+
+    const list = document.getElementById("setsResultList");
+    list.innerHTML = "";
+
+    for (let i = 1; i <= 5; i++) {
+        const sA = state.scores[i].A;
+        const sB = state.scores[i].B;
+        if (sA === 0 && sB === 0) continue;
+
+        const li = document.createElement("li");
+        li.innerHTML = `Set ${i}: <span>${sA} - ${sB}</span>`;
+        list.appendChild(li);
+    }
+}
+
+function renderScoreHeaderLabels() {
+    document.getElementById("labelTeamA_live").textContent = state.teamA || "Team A";
+    document.getElementById("labelTeamB_live").textContent = state.teamB || "Team B";
+}
+
+/* STORAGE, TEMA, PDF */
 
 function saveToStorage() {
     try {
@@ -363,8 +465,10 @@ function loadFromStorage() {
         state = Object.assign(state, parsed);
         for (let i = 1; i <= 5; i++) {
             if (!state.sets[i]) state.sets[i] = [];
+            if (!state.scores[i]) state.scores[i] = { A: 0, B: 0 };
         }
         if (!state.rotation) state.rotation = [1,2,3,4,5,6];
+        if (typeof state.sideSwitched !== "boolean") state.sideSwitched = false;
     } catch (e) {
         console.warn("Impossibile leggere da localStorage", e);
     }
@@ -379,6 +483,13 @@ function resetAll() {
         matchPlace: "",
         currentSet: 1,
         sets: {1: [], 2: [], 3: [], 4: [], 5: []},
+        scores: {
+            1: { A: 0, B: 0 },
+            2: { A: 0, B: 0 },
+            3: { A: 0, B: 0 },
+            4: { A: 0, B: 0 },
+            5: { A: 0, B: 0 }
+        },
         rotation: [1,2,3,4,5,6],
         sideSwitched: false
     };
@@ -394,51 +505,95 @@ function saveAndRenderHeader(save = true) {
     if (save) saveToStorage();
 }
 
+/* PDF: STRUTTURA PULITA, ORIZZONTALE, SENZA +/– */
+
 function exportPDF(isFinale) {
-    const element = document.getElementById("report");
+    const players = state.sets[state.currentSet];
+
+    let html = `
+        <h2>Statistiche Pallavolo - Set ${state.currentSet}</h2>
+        <p>${state.teamA || "Team A"} - vs - ${state.teamB || "Team B"}</p>
+        <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; font-size:10px;">
+            <thead>
+                <tr>
+                    <th>Giocatore</th>
+                    <th>Att+</th><th>Att-</th>
+                    <th>Dif+</th><th>Dif-</th>
+                    <th>Bat+</th><th>Bat-</th>
+                    <th>Rcz+</th><th>Rcz-</th>
+                    <th>Muro</th><th>MuroP</th><th>MuroF</th>
+                    <th>Papere</th>
+                    <th>%Att</th><th>%Dif</th><th>%Bat</th><th>%Rcz</th><th>%Muro+</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    players.forEach(p => {
+        const perc = calcPercentages(p);
+        html += `
+            <tr>
+                <td>${p.name}</td>
+                <td>${p.attPos}</td><td>${p.attNeg}</td>
+                <td>${p.difPos}</td><td>${p.difNeg}</td>
+                <td>${p.battPos}</td><td>${p.battNeg}</td>
+                <td>${p.ricezPos}</td><td>${p.ricezNeg}</td>
+                <td>${p.muro}</td><td>${p.muroPunto}</td><td>${p.muroFuori}</td>
+                <td>${p.papere}</td>
+                <td>${perc.att.toFixed(0)}%</td>
+                <td>${perc.dif.toFixed(0)}%</td>
+                <td>${perc.bat.toFixed(0)}%</td>
+                <td>${perc.rcz.toFixed(0)}%</td>
+                <td>${perc.muro.toFixed(0)}%</td>
+            </tr>
+        `;
+    });
+
+    const totals = {
+        attPos: 0, attNeg: 0,
+        difPos: 0, difNeg: 0,
+        battPos: 0, battNeg: 0,
+        ricezPos: 0, ricezNeg: 0,
+        muro: 0, muroPunto: 0, muroFuori: 0,
+        papere: 0
+    };
+    players.forEach(p => {
+        fieldsOrder.forEach(f => totals[f] += p[f]);
+    });
+    const percTot = calcPercentages(totals);
+
+    html += `
+            <tr>
+                <td><b>Totali</b></td>
+                <td>${totals.attPos}</td><td>${totals.attNeg}</td>
+                <td>${totals.difPos}</td><td>${totals.difNeg}</td>
+                <td>${totals.battPos}</td><td>${totals.battNeg}</td>
+                <td>${totals.ricezPos}</td><td>${totals.ricezNeg}</td>
+                <td>${totals.muro}</td><td>${totals.muroPunto}</td><td>${totals.muroFuori}</td>
+                <td>${totals.papere}</td>
+                <td>${percTot.att.toFixed(0)}%</td>
+                <td>${percTot.dif.toFixed(0)}%</td>
+                <td>${percTot.bat.toFixed(0)}%</td>
+                <td>${percTot.rcz.toFixed(0)}%</td>
+                <td>${percTot.muro.toFixed(0)}%</td>
+            </tr>
+        </tbody>
+        </table>
+    `;
+
+    const container = document.createElement("div");
+    container.innerHTML = html;
 
     const opt = {
-        margin:       5,
-        filename:     isFinale ? 'statistiche_volley_finale.pdf' : `statistiche_volley_set${state.currentSet}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        margin: 5,
+        filename: isFinale
+            ? `statistiche_volley_finale_set${state.currentSet}.pdf`
+            : `statistiche_volley_set${state.currentSet}.pdf`,
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
     };
 
-    html2pdf().from(element).set(opt).save();
-}
-
-function exportJson() {
-    const dataStr = JSON.stringify(state, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "volley_stats_backup.json";
-    a.click();
-
-    URL.revokeObjectURL(url);
-}
-
-function importJson(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-        try {
-            const imported = JSON.parse(reader.result);
-            if (!imported.sets) throw new Error("Formato non valido");
-            state = imported;
-            saveToStorage();
-            renderAll();
-            alert("Backup importato correttamente.");
-        } catch (err) {
-            alert("Errore nel file di backup.");
-        }
-    };
-    reader.readAsText(file);
+    html2pdf().from(container).set(opt).save();
 }
 
 /* Tema chiaro/scuro */
