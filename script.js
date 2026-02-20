@@ -79,6 +79,8 @@ function bindUI() {
 
     document.getElementById("pdfSet").addEventListener("click", () => exportPDF(false));
     document.getElementById("pdfFinale").addEventListener("click", () => exportPDF(true));
+    document.getElementById("pdfPagelle").addEventListener("click", exportPagellePDF);
+
 
     document.getElementById("playersBody").addEventListener("click", handleTableClick);
 
@@ -283,7 +285,12 @@ function renderSummary() {
 
     document.getElementById("summaryBestAtt").textContent = bestAtt || "-";
     document.getElementById("summaryBestRcz").textContent = bestRcz || "-";
+
+    // MVP MOMENTANEO
+    const mvp = getMVP();
+    document.getElementById("summaryMVP").textContent = mvp || "-";
 }
+
 
 function getBestPlayerBy(type) {
     const players = state.sets[state.currentSet];
@@ -300,8 +307,36 @@ function getBestPlayerBy(type) {
         }
     });
 
-    return bestName;
+    return bestName; 
 }
+
+function getMVP() {
+    const players = state.sets[state.currentSet];
+    let best = null;
+    let bestScore = -999;
+
+    players.forEach(p => {
+        const score =
+            (p.attPos * 1.2) +
+            (p.difPos * 1.0) +
+            (p.battPos * 1.0) +
+            (p.ricezPos * 1.1) +
+            (p.muroPunto * 1.5) -
+            (p.attNeg * 1.0) -
+            (p.difNeg * 0.8) -
+            (p.battNeg * 0.8) -
+            (p.ricezNeg * 0.8) -
+            (p.papere * 2);
+
+        if (score > bestScore) {
+            bestScore = score;
+            best = `${p.name} (${score.toFixed(1)})`;
+        }
+    });
+
+    return best;
+}
+
 
 function highlightBestPlayers() {
     const players = state.sets[state.currentSet];
@@ -349,35 +384,64 @@ function renderCourt(withAnimation) {
     const players = state.sets[state.currentSet];
     const firstSix = players.slice(0, 6);
 
+    // Mappa ruoli → posizioni fisse
+    const roleToPos = {
+        "P": [1],      // Palleggio
+        "O": [2],      // Opposto
+        "C": [3, 6],   // Centrali
+        "B": [4, 5],   // Bande
+        "L": ["libero"]
+    };
+
     const assigned = {};
 
-    // 1) Assegna giocatori alle posizioni in base alla rotazione
-    firstSix.forEach((player, index) => {
-        const rotationPos = state.rotation[index]; // 1..6
-        if (!rotationPos) return;
-        assigned[rotationPos] = player;
+    // 1) Assegna i ruoli alle posizioni BASE
+    firstSix.forEach(player => {
+        if (player.role === "L") return;
+
+        const positions = roleToPos[player.role];
+        if (!positions) return;
+
+        for (let pos of positions) {
+            if (!assigned[pos]) {
+                assigned[pos] = player;
+                break;
+            }
+        }
     });
 
-    // 2) Libero sostituisce centrale in seconda linea (posizioni 5 o 6, poi 1)
+    // 2) Applica la rotazione alle posizioni
+    const rotatedAssigned = {};
+    Object.keys(assigned).forEach(basePos => {
+        const player = assigned[basePos];
+
+        // Trova la posizione ruotata
+        const index = state.rotation.indexOf(parseInt(basePos));
+        const rotatedPos = state.rotation[index];
+
+        rotatedAssigned[rotatedPos] = player;
+    });
+
+    // 3) Libero sostituisce centrale in seconda linea (5, 6, 1)
     const libero = firstSix.find(p => p.role === "L");
     if (libero) {
         const backRow = [5, 6, 1];
         for (let pos of backRow) {
-            if (assigned[pos] && assigned[pos].role === "C") {
-                assigned[pos] = libero;
+            if (rotatedAssigned[pos] && rotatedAssigned[pos].role === "C") {
+                rotatedAssigned[pos] = libero;
                 break;
             }
         }
     }
 
-    // 3) Disegna i giocatori nelle posizioni
-    Object.keys(assigned).forEach(pos => {
-        const player = assigned[pos];
+    // 4) Disegna i giocatori nelle posizioni ruotate
+    Object.keys(rotatedAssigned).forEach(pos => {
+        const player = rotatedAssigned[pos];
         const targetDiv = sideA.querySelector(`.pos-${pos}`);
         if (!targetDiv) return;
 
         const dot = document.createElement("div");
-        dot.className = `player-dot role-${player.role || "S"}`;
+        dot.className = `player-dot role-${player.role}`;
 
         const nameSpan = document.createElement("div");
         nameSpan.className = "player-dot-name";
@@ -385,7 +449,7 @@ function renderCourt(withAnimation) {
 
         const roleSpan = document.createElement("div");
         roleSpan.className = "player-dot-role";
-        roleSpan.textContent = player.role || "";
+        roleSpan.textContent = player.role;
 
         dot.appendChild(nameSpan);
         dot.appendChild(roleSpan);
@@ -402,11 +466,19 @@ function renderCourt(withAnimation) {
     }
 }
 
+
+
 function rotateClockwise() {
+    // Ruota le posizioni (1→6→5→4→3→2→1)
     const arr = state.rotation;
     const last = arr.pop();
     arr.unshift(last);
+
+    // Dopo la rotazione, ridisegna il campo
+    renderCourt(true);
+    saveToStorage();
 }
+
 
 /* SOSTITUZIONI */
 
@@ -658,4 +730,84 @@ function applySavedTheme() {
     if (theme === "light") {
         document.body.classList.add("light");
     }
+}
+
+function exportPagellePDF() {
+    const players = state.sets[state.currentSet];
+
+    let html = `
+        <h2>Pagelle della Partita - Set ${state.currentSet}</h2>
+        <p>${state.teamA || "Team A"} - vs - ${state.teamB || "Team B"}</p>
+        <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; font-size:11px;">
+            <thead>
+                <tr>
+                    <th>Giocatore</th>
+                    <th>Ruolo</th>
+                    <th>Voto</th>
+                    <th>Consiglio</th>
+                    <th>Motivazione</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    players.forEach(p => {
+        const score =
+            (p.attPos * 1.2) +
+            (p.difPos * 1.0) +
+            (p.battPos * 1.0) +
+            (p.ricezPos * 1.1) +
+            (p.muroPunto * 1.5) -
+            (p.attNeg * 1.0) -
+            (p.difNeg * 0.8) -
+            (p.battNeg * 0.8) -
+            (p.ricezNeg * 0.8) -
+            (p.papere * 2);
+
+        const voto = Math.max(1, Math.min(10, (score / 5) + 6)).toFixed(1);
+
+        let consiglio = "";
+        let motivazione = "";
+
+        if (voto >= 8) {
+            consiglio = "Continua così";
+            motivazione = "Prestazione molto solida, pochi errori e grande contributo.";
+        } else if (voto >= 6.5) {
+            consiglio = "Buon lavoro";
+            motivazione = "Prestazione positiva con margini di miglioramento.";
+        } else if (voto >= 5) {
+            consiglio = "Lavora su tecnica e costanza";
+            motivazione = "Alti e bassi, serve più continuità.";
+        } else {
+            consiglio = "Serve più concentrazione";
+            motivazione = "Troppi errori, migliorare gestione e precisione.";
+        }
+
+        html += `
+            <tr>
+                <td>${p.name}</td>
+                <td>${p.role}</td>
+                <td>${voto}</td>
+                <td>${consiglio}</td>
+                <td>${motivazione}</td>
+            </tr>
+        `;
+    });
+
+    html += `
+            </tbody>
+        </table>
+    `;
+
+    const container = document.createElement("div");
+    container.innerHTML = html;
+
+    const opt = {
+        margin: 5,
+        filename: `pagelle_volley_set${state.currentSet}.pdf`,
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+
+    html2pdf().from(container).set(opt).save();
 }

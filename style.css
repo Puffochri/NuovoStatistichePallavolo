@@ -13,11 +13,12 @@
     --success: #22c55e;
     --shadow-soft: 0 18px 45px rgba(15,23,42,0.7);
 
-    --role-P: #facc15;
-    --role-O: #f97316;
-    --role-C: #3b82f6;
-    --role-S: #22c55e;
-    --role-L: #f9fafb;
+--role-P: #facc15;
+--role-O: #f97316;
+--role-C: #3b82f6;
+--role-B: #22c55e;
+--role-L: #f9fafb;
+
 }
 
 /* Tema chiaro */
@@ -553,8 +554,9 @@ body.light tfoot td { background: #e5e7eb; }
 .player-dot.role-P { background: radial-gradient(circle at 30% 30%, #fef9c3, var(--role-P)); }
 .player-dot.role-O { background: radial-gradient(circle at 30% 30%, #fed7aa, var(--role-O)); }
 .player-dot.role-C { background: radial-gradient(circle at 30% 30%, #bfdbfe, var(--role-C)); color:#0f172a; }
-.player-dot.role-S { background: radial-gradient(circle at 30% 30%, #bbf7d0, var(--role-S)); }
+.player-dot.role-B { background: radial-gradient(circle at 30% 30%, #bbf7d0, var(--role-B)); }
 .player-dot.role-L { background: radial-gradient(circle at 30% 30%, #f9fafb, #e5e7eb); }
+
 
 .player-dot:hover {
     transform: translateY(-2px);
