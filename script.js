@@ -624,52 +624,91 @@ function saveAndRenderHeader(save = true) {
     if (save) saveToStorage();
 }
 
-/* PDF: STRUTTURA PULITA, ORIZZONTALE */
+/* PDF: STRUTTURA PULITA, ORIZZONTALE E PROFESSIONALE */
 
 function exportPDF(isFinale) {
     const players = state.sets[state.currentSet];
 
+    /* COPERTINA ELEGANTE */
     let html = `
-        <h2>Statistiche Pallavolo - Set ${state.currentSet}</h2>
-        <p>${state.teamA || "Team A"} - vs - ${state.teamB || "Team B"}</p>
-        <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; font-size:10px;">
+        <div style="text-align:center; margin-bottom:25px;">
+            <h1 style="margin:0; font-size:26px;">Statistiche Pallavolo</h1>
+            <h2 style="margin:5px 0 10px; font-size:20px;">
+                ${state.teamA || "Team A"} vs ${state.teamB || "Team B"}
+            </h2>
+            <p style="font-size:14px; margin:0;">
+                <b>Set:</b> ${state.currentSet} &nbsp;&nbsp; 
+                <b>Data:</b> ${state.matchDate || "-"} &nbsp;&nbsp; 
+                <b>Luogo:</b> ${state.matchPlace || "-"}
+            </p>
+            <hr style="margin-top:20px; border:0; border-top:2px solid #333;">
+        </div>
+    `;
+
+    /* INIZIO TABELLA MIGLIORATA */
+    html += `
+        <table style="
+            width:100%;
+            border-collapse:collapse;
+            font-size:11px;
+            text-align:center;
+        ">
             <thead>
-                <tr>
-                    <th>Giocatore</th>
-                    <th>Ruolo</th>
-                    <th>Att+</th><th>Att-</th>
-                    <th>Dif+</th><th>Dif-</th>
-                    <th>Bat+</th><th>Bat-</th>
-                    <th>Rcz+</th><th>Rcz-</th>
-                    <th>Muro</th><th>MuroP</th><th>MuroF</th>
-                    <th>Papere</th>
-                    <th>%Att</th><th>%Dif</th><th>%Bat</th><th>%Rcz</th><th>%Muro+</th>
+                <tr style="background:#e5e7eb;">
+                    <th style="padding:6px; border:1px solid #ccc;">Giocatore</th>
+                    <th style="padding:6px; border:1px solid #ccc;">Ruolo</th>
+                    <th style="padding:6px; border:1px solid #ccc;">Att+</th>
+                    <th style="padding:6px; border:1px solid #ccc;">Att-</th>
+                    <th style="padding:6px; border:1px solid #ccc;">Dif+</th>
+                    <th style="padding:6px; border:1px solid #ccc;">Dif-</th>
+                    <th style="padding:6px; border:1px solid #ccc;">Bat+</th>
+                    <th style="padding:6px; border:1px solid #ccc;">Bat-</th>
+                    <th style="padding:6px; border:1px solid #ccc;">Rcz+</th>
+                    <th style="padding:6px; border:1px solid #ccc;">Rcz-</th>
+                    <th style="padding:6px; border:1px solid #ccc;">Muro</th>
+                    <th style="padding:6px; border:1px solid #ccc;">MuroP</th>
+                    <th style="padding:6px; border:1px solid #ccc;">MuroF</th>
+                    <th style="padding:6px; border:1px solid #ccc;">Papere</th>
+                    <th style="padding:6px; border:1px solid #ccc;">%Att</th>
+                    <th style="padding:6px; border:1px solid #ccc;">%Dif</th>
+                    <th style="padding:6px; border:1px solid #ccc;">%Bat</th>
+                    <th style="padding:6px; border:1px solid #ccc;">%Rcz</th>
+                    <th style="padding:6px; border:1px solid #ccc;">%Muro+</th>
                 </tr>
             </thead>
             <tbody>
     `;
 
-    players.forEach(p => {
+    /* RIGHE GIOCATORI */
+    players.forEach((p, i) => {
         const perc = calcPercentages(p);
+
         html += `
-            <tr>
-                <td>${p.name}</td>
-                <td>${p.role || "-"}</td>
-                <td>${p.attPos}</td><td>${p.attNeg}</td>
-                <td>${p.difPos}</td><td>${p.difNeg}</td>
-                <td>${p.battPos}</td><td>${p.battNeg}</td>
-                <td>${p.ricezPos}</td><td>${p.ricezNeg}</td>
-                <td>${p.muro}</td><td>${p.muroPunto}</td><td>${p.muroFuori}</td>
-                <td>${p.papere}</td>
-                <td>${perc.att.toFixed(0)}%</td>
-                <td>${perc.dif.toFixed(0)}%</td>
-                <td>${perc.bat.toFixed(0)}%</td>
-                <td>${perc.rcz.toFixed(0)}%</td>
-                <td>${perc.muro.toFixed(0)}%</td>
+            <tr style="background:${i % 2 === 0 ? '#f9fafb' : '#ffffff'};">
+                <td style="padding:6px; border:1px solid #ddd;">${p.name}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${p.role || "-"}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${p.attPos}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${p.attNeg}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${p.difPos}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${p.difNeg}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${p.battPos}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${p.battNeg}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${p.ricezPos}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${p.ricezNeg}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${p.muro}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${p.muroPunto}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${p.muroFuori}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${p.papere}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${perc.att.toFixed(0)}%</td>
+                <td style="padding:6px; border:1px solid #ddd;">${perc.dif.toFixed(0)}%</td>
+                <td style="padding:6px; border:1px solid #ddd;">${perc.bat.toFixed(0)}%</td>
+                <td style="padding:6px; border:1px solid #ddd;">${perc.rcz.toFixed(0)}%</td>
+                <td style="padding:6px; border:1px solid #ddd;">${perc.muro.toFixed(0)}%</td>
             </tr>
         `;
     });
 
+    /* TOTALI */
     const totals = {
         attPos: 0, attNeg: 0,
         difPos: 0, difNeg: 0,
@@ -678,31 +717,36 @@ function exportPDF(isFinale) {
         muro: 0, muroPunto: 0, muroFuori: 0,
         papere: 0
     };
-    players.forEach(p => {
-        fieldsOrder.forEach(f => totals[f] += p[f]);
-    });
+    players.forEach(p => fieldsOrder.forEach(f => totals[f] += p[f]));
     const percTot = calcPercentages(totals);
 
     html += `
-            <tr>
-                <td><b>Totali</b></td>
-                <td></td>
-                <td>${totals.attPos}</td><td>${totals.attNeg}</td>
-                <td>${totals.difPos}</td><td>${totals.difNeg}</td>
-                <td>${totals.battPos}</td><td>${totals.battNeg}</td>
-                <td>${totals.ricezPos}</td><td>${totals.ricezNeg}</td>
-                <td>${totals.muro}</td><td>${totals.muroPunto}</td><td>${totals.muroFuori}</td>
-                <td>${totals.papere}</td>
-                <td>${percTot.att.toFixed(0)}%</td>
-                <td>${percTot.dif.toFixed(0)}%</td>
-                <td>${percTot.bat.toFixed(0)}%</td>
-                <td>${percTot.rcz.toFixed(0)}%</td>
-                <td>${percTot.muro.toFixed(0)}%</td>
+            <tr style="background:#d1d5db; font-weight:bold;">
+                <td style="padding:6px; border:1px solid #aaa;">Totali</td>
+                <td style="border:1px solid #aaa;"></td>
+                <td style="border:1px solid #aaa;">${totals.attPos}</td>
+                <td style="border:1px solid #aaa;">${totals.attNeg}</td>
+                <td style="border:1px solid #aaa;">${totals.difPos}</td>
+                <td style="border:1px solid #aaa;">${totals.difNeg}</td>
+                <td style="border:1px solid #aaa;">${totals.battPos}</td>
+                <td style="border:1px solid #aaa;">${totals.battNeg}</td>
+                <td style="border:1px solid #aaa;">${totals.ricezPos}</td>
+                <td style="border:1px solid #aaa;">${totals.ricezNeg}</td>
+                <td style="border:1px solid #aaa;">${totals.muro}</td>
+                <td style="border:1px solid #aaa;">${totals.muroPunto}</td>
+                <td style="border:1px solid #aaa;">${totals.muroFuori}</td>
+                <td style="border:1px solid #aaa;">${totals.papere}</td>
+                <td style="border:1px solid #aaa;">${percTot.att.toFixed(0)}%</td>
+                <td style="border:1px solid #aaa;">${percTot.dif.toFixed(0)}%</td>
+                <td style="border:1px solid #aaa;">${percTot.bat.toFixed(0)}%</td>
+                <td style="border:1px solid #aaa;">${percTot.rcz.toFixed(0)}%</td>
+                <td style="border:1px solid #aaa;">${percTot.muro.toFixed(0)}%</td>
             </tr>
         </tbody>
         </table>
     `;
 
+    /* GENERAZIONE PDF */
     const container = document.createElement("div");
     container.innerHTML = html;
 
@@ -718,22 +762,9 @@ function exportPDF(isFinale) {
     html2pdf().from(container).set(opt).save();
 }
 
-/* Tema chiaro/scuro */
-
-function toggleTheme() {
-    const isLight = document.body.classList.toggle("light");
-    localStorage.setItem("volley_theme", isLight ? "light" : "dark");
-}
-
-function applySavedTheme() {
-    const theme = localStorage.getItem("volley_theme");
-    if (theme === "light") {
-        document.body.classList.add("light");
-    }
-}
 
 function exportPagellePDF() {
-    // 1) SOMMO LE STATISTICHE DI TUTTI I SET
+    /* 1) SOMMO LE STATISTICHE DI TUTTI I SET */
     const allPlayersMap = {};
 
     for (let s = 1; s <= 5; s++) {
@@ -771,25 +802,44 @@ function exportPagellePDF() {
 
     const players = Object.values(allPlayersMap);
 
-    // 2) COSTRUISCO IL PDF
+    /* 2) COPERTINA PROFESSIONALE */
     let html = `
-        <h2>Pagelle Finali della Partita</h2>
-        <p>${state.teamA || "Team A"} - vs - ${state.teamB || "Team B"}</p>
-        <p><b>Resoconto di tutti i set</b></p>
-        <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; font-size:11px;">
+        <div style="text-align:center; margin-bottom:25px;">
+            <h1 style="margin:0; font-size:26px;">Pagelle Finali della Partita</h1>
+            <h2 style="margin:5px 0 10px; font-size:20px;">
+                ${state.teamA || "Team A"} vs ${state.teamB || "Team B"}
+            </h2>
+            <p style="font-size:14px; margin:0;">
+                <b>Data:</b> ${state.matchDate || "-"} &nbsp;&nbsp; 
+                <b>Luogo:</b> ${state.matchPlace || "-"}
+            </p>
+            <p style="font-size:14px; margin-top:5px;"><b>Resoconto di tutti i set</b></p>
+            <hr style="margin-top:20px; border:0; border-top:2px solid #333;">
+        </div>
+    `;
+
+    /* 3) TABELLA MIGLIORATA */
+    html += `
+        <table style="
+            width:100%;
+            border-collapse:collapse;
+            font-size:12px;
+            text-align:center;
+        ">
             <thead>
-                <tr>
-                    <th>Giocatore</th>
-                    <th>Ruolo</th>
-                    <th>Voto</th>
-                    <th>Consiglio</th>
-                    <th>Motivazione</th>
+                <tr style="background:#e5e7eb;">
+                    <th style="padding:6px; border:1px solid #ccc;">Giocatore</th>
+                    <th style="padding:6px; border:1px solid #ccc;">Ruolo</th>
+                    <th style="padding:6px; border:1px solid #ccc;">Voto</th>
+                    <th style="padding:6px; border:1px solid #ccc;">Consiglio</th>
+                    <th style="padding:6px; border:1px solid #ccc;">Motivazione</th>
                 </tr>
             </thead>
             <tbody>
     `;
 
-    players.forEach(p => {
+    /* 4) RIGHE GIOCATORI + COLORI VOTO */
+    players.forEach((p, i) => {
         const score =
             (p.attPos * 1.2) +
             (p.difPos * 1.0) +
@@ -803,6 +853,11 @@ function exportPagellePDF() {
             (p.papere * 2);
 
         const voto = Math.max(1, Math.min(10, (score / 8) + 6)).toFixed(1);
+
+        let color = "#ef4444"; // rosso
+        if (voto >= 8) color = "#22c55e";      // verde
+        else if (voto >= 6.5) color = "#eab308"; // giallo
+        else if (voto >= 5) color = "#f97316";   // arancione
 
         let consiglio = "";
         let motivazione = "";
@@ -822,12 +877,12 @@ function exportPagellePDF() {
         }
 
         html += `
-            <tr>
-                <td>${p.name}</td>
-                <td>${p.role}</td>
-                <td>${voto}</td>
-                <td>${consiglio}</td>
-                <td>${motivazione}</td>
+            <tr style="background:${i % 2 === 0 ? '#f9fafb' : '#ffffff'};">
+                <td style="padding:6px; border:1px solid #ddd;">${p.name}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${p.role}</td>
+                <td style="padding:6px; border:1px solid #ddd; font-weight:bold; color:${color};">${voto}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${consiglio}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${motivazione}</td>
             </tr>
         `;
     });
@@ -837,6 +892,7 @@ function exportPagellePDF() {
         </table>
     `;
 
+    /* 5) GENERAZIONE PDF ORIZZONTALE */
     const container = document.createElement("div");
     container.innerHTML = html;
 
@@ -849,4 +905,5 @@ function exportPagellePDF() {
 
     html2pdf().from(container).set(opt).save();
 }
+
 
