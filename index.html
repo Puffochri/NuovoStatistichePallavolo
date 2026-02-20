@@ -2,24 +2,17 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Scouting Match Pallavolo</title>
+    <title>Volley Stats Pro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- PWA -->
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="theme-color" content="#0b5ed7">
-
-    <!-- Icone -->
     <link rel="icon" type="image/png" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-512.png">
 
-    <!-- Stili -->
     <link rel="stylesheet" href="style.css">
-
-    <!-- PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
 </head>
-
 <body>
 
 <div id="app" class="fade-in">
@@ -27,7 +20,7 @@
     <header class="app-header">
         <div class="title-block">
             <h1>🏐 Volley Stats Pro</h1>
-            <p class="subtitle">Statistiche, campo, punteggi live</p>
+            <p class="subtitle">Statistiche, campo, ruoli, punteggi live</p>
         </div>
         <div class="header-actions">
             <button id="themeToggle" title="Tema chiaro/scuro">🌓</button>
@@ -124,15 +117,25 @@
     <!-- CAMPO DI GIOCO -->
     <section class="court-section card">
         <div class="court-header">
-            <h2>Campo, rotazioni e sostituzioni</h2>
+            <div>
+                <h2>Campo, ruoli, rotazioni</h2>
+                <p class="small-note">
+                    Ruoli: <span class="role-badge role-P">P</span> Palleggio ·
+                    <span class="role-badge role-O">O</span> Opposto ·
+                    <span class="role-badge role-C">C</span> Centrale ·
+                    <span class="role-badge role-S">S</span> Schiacciatrice ·
+                    <span class="role-badge role-L">L</span> Libero
+                </p>
+            </div>
             <div class="court-controls">
                 <button id="rotateClockwise">↻ Rotazione</button>
                 <button id="switchSide">⇄ Cambio campo</button>
             </div>
         </div>
         <p class="small-note">
-            Le prime 6 giocatrici della lista sono in campo (posizioni 1–6).  
-            Tocca una giocatrice in campo per sostituirla con un’altra dalla lista.
+            Le prime 6 giocatrici della lista sono in campo.  
+            Il libero sostituisce automaticamente il centrale in seconda linea.
+            Tocca un pallino per fare una sostituzione.
         </p>
 
         <div class="court-wrapper">
@@ -159,19 +162,18 @@
         <div class="players-header">
             <h2>Giocatori</h2>
             <div class="add-player">
-    <input id="playerName" placeholder="Nome giocatore">
+                <input id="playerName" placeholder="Nome giocatore">
 
-    <select id="playerRole">
-        <option value="P">P - Palleggio</option>
-        <option value="O">O - Opposto</option>
-        <option value="C">C - Centrale</option>
-        <option value="S">S - Schiacciatrice</option>
-        <option value="L">L - Libero</option>
-    </select>
+                <select id="playerRole">
+                    <option value="P">P - Palleggio</option>
+                    <option value="O">O - Opposto</option>
+                    <option value="C">C - Centrale</option>
+                    <option value="S">S - Schiacciatrice</option>
+                    <option value="L">L - Libero</option>
+                </select>
 
-    <button id="addPlayer">➕ Aggiungi</button>
-</div>
-
+                <button id="addPlayer">➕ Aggiungi</button>
+            </div>
         </div>
 
         <div id="report">
@@ -188,13 +190,14 @@
                     <thead>
                         <tr>
                             <th>Giocatore</th>
-                            <th>attPos</th><th>attNeg</th>
-                            <th>difPos</th><th>difNeg</th>
-                            <th>battPos</th><th>battNeg</th>
-                            <th>ricezPos</th><th>ricezNeg</th>
-                            <th>muro</th><th>muroPunto</th><th>muroFuori</th>
+                            <th>Ruolo</th>
+                            <th>Att+</th><th>Att-</th>
+                            <th>Dif+</th><th>Dif-</th>
+                            <th>Bat+</th><th>Bat-</th>
+                            <th>Rcz+</th><th>Rcz-</th>
+                            <th>Muro</th><th>MuroP</th><th>MuroF</th>
                             <th>Papere</th>
-                            <th>% Att</th><th>% Dif</th><th>% Bat</th><th>% Rcz</th><th>% Muro+</th>
+                            <th>%Att</th><th>%Dif</th><th>%Bat</th><th>%Rcz</th><th>%Muro+</th>
                             <th>Azioni</th>
                         </tr>
                     </thead>
@@ -203,6 +206,7 @@
                     <tfoot>
                         <tr id="totalsRow">
                             <td><b>Totali</b></td>
+                            <td></td>
                             <td>0</td><td>0</td>
                             <td>0</td><td>0</td>
                             <td>0</td><td>0</td>

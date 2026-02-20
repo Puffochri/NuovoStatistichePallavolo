@@ -1,4 +1,4 @@
-const STORAGE_KEY = "volley_stats_pwa_v4";
+const STORAGE_KEY = "volley_stats_pwa_pro";
 
 let state = {
     teamA: "",
@@ -118,7 +118,7 @@ function addPlayer() {
 
     const player = {
         name,
-        role, // NUOVO
+        role,
         attPos: 0, attNeg: 0,
         difPos: 0, difNeg: 0,
         battPos: 0, battNeg: 0,
@@ -136,7 +136,6 @@ function addPlayer() {
     renderCourt(true);
     saveToStorage();
 }
-
 
 function handleTableClick(e) {
     const target = e.target;
@@ -199,6 +198,7 @@ function renderPlayers(scrollToBottom = false) {
         tr.dataset.index = idx;
 
         let html = `<td>${p.name}</td>`;
+        html += `<td>${p.role || "-"}</td>`;
 
         fieldsOrder.forEach(field => {
             html += `
@@ -211,13 +211,15 @@ function renderPlayers(scrollToBottom = false) {
         });
 
         const perc = calcPercentages(p);
+        const totalActions = fieldsOrder.reduce((sum, f) => sum + (p[f] || 0), 0);
+
         html += `
             <td>${perc.att.toFixed(0)}%</td>
             <td>${perc.dif.toFixed(0)}%</td>
             <td>${perc.bat.toFixed(0)}%</td>
             <td>${perc.rcz.toFixed(0)}%</td>
             <td>${perc.muro.toFixed(0)}%</td>
-            <td><span class="delete">🗑</span></td>
+            <td>${totalActions}</td>
         `;
 
         tr.innerHTML = html;
@@ -252,7 +254,7 @@ function renderTotals() {
     const row = document.getElementById("totalsRow");
     const cells = row.querySelectorAll("td");
 
-    let i = 1;
+    let i = 2; // 0=Totali,1=ruolo vuoto
     fieldsOrder.forEach(f => {
         cells[i].textContent = totals[f];
         i++;
@@ -291,7 +293,8 @@ function getBestPlayerBy(type) {
     players.forEach(p => {
         const perc = calcPercentages(p);
         const val = perc[type];
-        if (val > bestVal && (p.attPos + p.attNeg + p.ricezPos + p.ricezNeg) > 0) {
+        const attempts = p.attPos + p.attNeg + p.ricezPos + p.ricezNeg;
+        if (val > bestVal && attempts > 0) {
             bestVal = val;
             bestName = `${p.name} (${val.toFixed(0)}%)`;
         }
@@ -334,7 +337,7 @@ function calcPercentages(obj) {
     };
 }
 
-/* CAMPO: ROTAZIONI, POSIZIONI, SOSTITUZIONI */
+/* CAMPO PRO: RUOLI, ROTAZIONI, LIBERO */
 
 function renderCourt(withAnimation) {
     const court = document.getElementById("court");
@@ -346,40 +349,20 @@ function renderCourt(withAnimation) {
     const players = state.sets[state.currentSet];
     const firstSix = players.slice(0, 6);
 
-    // Mappa ruoli → posizioni
-    const roleToPos = {
-        "P": [1],      // Palleggio
-        "O": [2],      // Opposto
-        "C": [3, 6],   // Centrali
-        "S": [4, 5],   // Schiacciatrici
-        "L": ["libero"] // Libero gestito dopo
-    };
-
     const assigned = {};
 
-    // Trova centrali e libero
-    const centrali = firstSix.filter(p => p.role === "C");
-    const libero = firstSix.find(p => p.role === "L");
-
-    // 1) Assegna ruoli normali (tranne libero)
-    firstSix.forEach(player => {
-        if (player.role === "L") return;
-
-        const positions = roleToPos[player.role];
-        if (!positions) return;
-
-        for (let pos of positions) {
-            if (!assigned[pos]) {
-                assigned[pos] = player;
-                break;
-            }
-        }
+    // 1) Assegna giocatori alle posizioni in base alla rotazione
+    firstSix.forEach((player, index) => {
+        const rotationPos = state.rotation[index]; // 1..6
+        if (!rotationPos) return;
+        assigned[rotationPos] = player;
     });
 
-    // 2) Libero sostituisce centrale in seconda linea (posizione 5 o 6)
+    // 2) Libero sostituisce centrale in seconda linea (posizioni 5 o 6, poi 1)
+    const libero = firstSix.find(p => p.role === "L");
     if (libero) {
-        const secondLine = [5, 6];
-        for (let pos of secondLine) {
+        const backRow = [5, 6, 1];
+        for (let pos of backRow) {
             if (assigned[pos] && assigned[pos].role === "C") {
                 assigned[pos] = libero;
                 break;
@@ -394,10 +377,21 @@ function renderCourt(withAnimation) {
         if (!targetDiv) return;
 
         const dot = document.createElement("div");
-        dot.className = "player-dot";
-        dot.textContent = player.name.length > 6 ? player.name.slice(0, 6) : player.name;
+        dot.className = `player-dot role-${player.role || "S"}`;
 
-        dot.onclick = () => openSubstitutionMenu(firstSix.indexOf(player));
+        const nameSpan = document.createElement("div");
+        nameSpan.className = "player-dot-name";
+        nameSpan.textContent = player.name;
+
+        const roleSpan = document.createElement("div");
+        roleSpan.className = "player-dot-role";
+        roleSpan.textContent = player.role || "";
+
+        dot.appendChild(nameSpan);
+        dot.appendChild(roleSpan);
+
+        const indexInFirstSix = firstSix.indexOf(player);
+        dot.onclick = () => openSubstitutionMenu(indexInFirstSix);
 
         targetDiv.appendChild(dot);
     });
@@ -408,12 +402,13 @@ function renderCourt(withAnimation) {
     }
 }
 
-
 function rotateClockwise() {
     const arr = state.rotation;
     const last = arr.pop();
     arr.unshift(last);
 }
+
+/* SOSTITUZIONI */
 
 function substitutePlayer(outIndex, inIndex) {
     const players = state.sets[state.currentSet];
@@ -557,7 +552,7 @@ function saveAndRenderHeader(save = true) {
     if (save) saveToStorage();
 }
 
-/* PDF: STRUTTURA PULITA, ORIZZONTALE, SENZA +/– */
+/* PDF: STRUTTURA PULITA, ORIZZONTALE */
 
 function exportPDF(isFinale) {
     const players = state.sets[state.currentSet];
@@ -569,6 +564,7 @@ function exportPDF(isFinale) {
             <thead>
                 <tr>
                     <th>Giocatore</th>
+                    <th>Ruolo</th>
                     <th>Att+</th><th>Att-</th>
                     <th>Dif+</th><th>Dif-</th>
                     <th>Bat+</th><th>Bat-</th>
@@ -586,6 +582,7 @@ function exportPDF(isFinale) {
         html += `
             <tr>
                 <td>${p.name}</td>
+                <td>${p.role || "-"}</td>
                 <td>${p.attPos}</td><td>${p.attNeg}</td>
                 <td>${p.difPos}</td><td>${p.difNeg}</td>
                 <td>${p.battPos}</td><td>${p.battNeg}</td>
@@ -617,6 +614,7 @@ function exportPDF(isFinale) {
     html += `
             <tr>
                 <td><b>Totali</b></td>
+                <td></td>
                 <td>${totals.attPos}</td><td>${totals.attNeg}</td>
                 <td>${totals.difPos}</td><td>${totals.difNeg}</td>
                 <td>${totals.battPos}</td><td>${totals.battNeg}</td>
