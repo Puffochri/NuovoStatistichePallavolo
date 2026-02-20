@@ -109,11 +109,16 @@ function bindUI() {
 
 function addPlayer() {
     const nameInput = document.getElementById("playerName");
+    const roleInput = document.getElementById("playerRole");
+
     const name = nameInput.value.trim();
+    const role = roleInput.value;
+
     if (!name) return;
 
     const player = {
         name,
+        role, // NUOVO
         attPos: 0, attNeg: 0,
         difPos: 0, difNeg: 0,
         battPos: 0, battNeg: 0,
@@ -123,11 +128,15 @@ function addPlayer() {
     };
 
     state.sets[state.currentSet].push(player);
+
     nameInput.value = "";
+    roleInput.value = "P";
+
     renderPlayers(true);
     renderCourt(true);
     saveToStorage();
 }
+
 
 function handleTableClick(e) {
     const target = e.target;
@@ -337,25 +346,68 @@ function renderCourt(withAnimation) {
     const players = state.sets[state.currentSet];
     const firstSix = players.slice(0, 6);
 
-    if (withAnimation) {
-        court.classList.add("court-animate");
-        setTimeout(() => court.classList.remove("court-animate"), 350);
+    // Mappa ruoli → posizioni
+    const roleToPos = {
+        "P": [1],      // Palleggio
+        "O": [2],      // Opposto
+        "C": [3, 6],   // Centrali
+        "S": [4, 5],   // Schiacciatrici
+        "L": ["libero"] // Libero gestito dopo
+    };
+
+    const assigned = {};
+
+    // Trova centrali e libero
+    const centrali = firstSix.filter(p => p.role === "C");
+    const libero = firstSix.find(p => p.role === "L");
+
+    // 1) Assegna ruoli normali (tranne libero)
+    firstSix.forEach(player => {
+        if (player.role === "L") return;
+
+        const positions = roleToPos[player.role];
+        if (!positions) return;
+
+        for (let pos of positions) {
+            if (!assigned[pos]) {
+                assigned[pos] = player;
+                break;
+            }
+        }
+    });
+
+    // 2) Libero sostituisce centrale in seconda linea (posizione 5 o 6)
+    if (libero) {
+        const secondLine = [5, 6];
+        for (let pos of secondLine) {
+            if (assigned[pos] && assigned[pos].role === "C") {
+                assigned[pos] = libero;
+                break;
+            }
+        }
     }
 
-    firstSix.forEach((player, index) => {
-        const rotationPos = state.rotation[index]; // 1..6
-        const targetDiv = sideA.querySelector(`.pos-${rotationPos}`);
+    // 3) Disegna i giocatori nelle posizioni
+    Object.keys(assigned).forEach(pos => {
+        const player = assigned[pos];
+        const targetDiv = sideA.querySelector(`.pos-${pos}`);
         if (!targetDiv) return;
 
         const dot = document.createElement("div");
         dot.className = "player-dot";
         dot.textContent = player.name.length > 6 ? player.name.slice(0, 6) : player.name;
 
-        dot.onclick = () => openSubstitutionMenu(index);
+        dot.onclick = () => openSubstitutionMenu(firstSix.indexOf(player));
 
         targetDiv.appendChild(dot);
     });
+
+    if (withAnimation) {
+        court.classList.add("court-animate");
+        setTimeout(() => court.classList.remove("court-animate"), 350);
+    }
 }
+
 
 function rotateClockwise() {
     const arr = state.rotation;

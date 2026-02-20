@@ -598,3 +598,15 @@ body.light tfoot td {
         font-size: 0.75rem;
     }
 }
+
+#playerRole {
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--card-border);
+    background: rgba(15,23,42,0.7);
+    color: var(--text-main);
+    outline: none;
+}
+body.light #playerRole {
+    background: #f9fafb;
+}
